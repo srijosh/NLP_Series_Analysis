@@ -56,7 +56,6 @@ def chat_with_character_chatbot(message, history):
                                          )
 
     output = character_chatbot.chat(message, history)
-    output = output['content'].strip()
     return output
 
 
