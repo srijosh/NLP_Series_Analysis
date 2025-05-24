@@ -137,13 +137,15 @@ class CharacterChatBot:
         # Generate response
             outputs = self.model.generate(
                 inputs["input_ids"],
-                max_new_tokens=100,
+                # max_new_tokens=100,
+                max_new_tokens=512,
                 do_sample=True,
                 temperature=0.7,
-                top_k=50,
+                # top_k=50,
                 top_p=0.9,
-                repetition_penalty=1.1,
-                pad_token_id=self.model_tokenizer.pad_token_id,
+                # repetition_penalty=1.1,
+                # pad_token_id=self.model_tokenizer.pad_token_id,
+                eos_token_id=self.model_tokenizer.eos_token_id,
             )
 
         # Decode and extract response

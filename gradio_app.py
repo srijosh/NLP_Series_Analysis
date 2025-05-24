@@ -83,7 +83,7 @@ def main():
                     with gr.Column():
                         network_html = gr.HTML()
                     with gr.Column():
-                        subtitles_path = gr.Textbox(label="Subtutles or Script Path")
+                        subtitles_path = gr.Textbox(label="Subtitles or Script Path")
                         ner_path = gr.Textbox(label="NERs save path")
                         get_network_graph_button = gr.Button("Get Character Network")
                         get_network_graph_button.click(get_character_network, inputs=[subtitles_path,ner_path], outputs=[network_html])
