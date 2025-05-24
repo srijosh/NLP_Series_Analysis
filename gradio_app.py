@@ -8,6 +8,12 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+# Initialize once globally (runs on script start)
+character_chatbot = CharacterChatBot(
+    "srijanjoshi/Naruto_Llama-3-8B",
+    huggingface_token=os.getenv('huggingface_token')
+)
+
 def get_themes(theme_list_str,subtitles_path,save_path):
     theme_list = theme_list_str.split(',')
     theme_classifier = ThemeClassifier(theme_list)
@@ -51,9 +57,9 @@ def classify_text(text_classifcation_model,text_classifcation_data_path,text_to_
     return output
 
 def chat_with_character_chatbot(message, history):
-    character_chatbot = CharacterChatBot("srijanjoshi/Naruto_Llama-3-8B",
-                                         huggingface_token = os.getenv('huggingface_token')
-                                         )
+    # character_chatbot = CharacterChatBot("srijanjoshi/Naruto_Llama-3-8B",
+    #                                      huggingface_token = os.getenv('huggingface_token')
+    #                                      )
 
     output = character_chatbot.chat(message, history)
     return output
