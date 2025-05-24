@@ -86,31 +86,43 @@ class CharacterChatBot:
 
     def chat(self, message, history):
         messages = []
-        # Add the system ptomp 
-        messages.append({"role":"system","content":""""Your are Naruto from the anime "Naruto". Your responses should reflect his personality and speech patterns \n"""})
+        # Add the system prompt
+        messages.append({"role": "system", "content": "You are Naruto from the anime 'Naruto'. Your responses should reflect his personality and speech patterns."})
 
-        for message_and_respnse in history:
-            messages.append({"role":"user","content":message_and_respnse[0]})
-            messages.append({"role":"assistant","content":message_and_respnse[1]})
+        for message_and_response in history:
+            messages.append({"role": "user", "content": message_and_response[0]})
+            messages.append({"role": "assistant", "content": message_and_response[1]})
         
-        messages.append({"role":"user","content":message})
+        messages.append({"role": "user", "content": message})
 
-        terminator = [
-            self.model.tokenizer.eos_token_id,
-            self.model.tokenizer.convert_tokens_to_ids("<|eot_id|>")
-        ]
+        # Convert messages into a single string prompt
+        prompt = ""
+        for msg in messages:
+            if msg["role"] == "system":
+                prompt += f"[System]: {msg['content']}\n"
+            elif msg["role"] == "user":
+                prompt += f"[User]: {msg['content']}\n"
+            elif msg["role"] == "assistant":
+                prompt += f"[Naruto]: {msg['content']}\n"
 
+        # Add the assistant's cue for generation
+        prompt += "[Naruto]:"
+
+        # Run the model (text-generation pipeline expects a string input)
         output = self.model(
-            messages,
+            prompt,
             max_length=256,
-            eos_token_id=terminator,
             do_sample=True,
             temperature=0.6,
-            top_p=0.9
+            top_p=0.9,
+            eos_token_id=self.model.tokenizer.eos_token_id,
         )
 
-        output_message = output[0]['generated_text'][-1]
-        return output_message
+        # Extract the generated response (remove the prompt part)
+        generated_text = output[0]['generated_text']
+        response = generated_text[len(prompt):].strip()
+
+        return response
 
 
     def train(
