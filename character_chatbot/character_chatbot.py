@@ -133,18 +133,19 @@ class CharacterChatBot:
             inputs = self.model_tokenizer(
                 conversation_text, return_tensors="pt", truncation=True, max_length=512
             ).to(self.device)
-
+            print(self.model_tokenizer.eos_token_id)
+            print(self.model_tokenizer.pad_token_id)
         # Generate response
             outputs = self.model.generate(
                 inputs["input_ids"],
                 # max_new_tokens=100,
-                max_new_tokens=512,
+                max_new_tokens=256,
                 do_sample=True,
-                temperature=0.7,
-                # top_k=50,
-                top_p=0.9,
-                # repetition_penalty=1.1,
-                # pad_token_id=self.model_tokenizer.pad_token_id,
+                temperature=0.7,    
+                top_k=50,
+                top_p=0.95,
+                repetition_penalty=1.2,
+                pad_token_id=self.model_tokenizer.pad_token_id,
                 eos_token_id=self.model_tokenizer.eos_token_id,
             )
 
