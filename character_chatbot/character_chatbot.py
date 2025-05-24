@@ -56,7 +56,7 @@ class CharacterChatBot:
         try:
             if huggingface_hub.repo_exists(self.model_path):
                 logger.info(f"Loading existing model from {self.model_path}")
-                self.model, self.model_tokenizer = self.load_model(self.model_path)
+                self.model = self.load_model(self.model_path)
             else:
                 logger.info("No existing model found. Training new model.")
                 train_dataset = self.load_data()
@@ -65,102 +65,52 @@ class CharacterChatBot:
                     raise ValueError("No valid training data found")
                 
                 self.train(self.base_model_path, train_dataset)
-                self.model, self.model_tokenizer = self.load_model(self.model_path)
+                self.model = self.load_model(self.model_path)
         except Exception as e:
             logger.error(f"Model initialization error: {e}")
             raise
 
     def load_model(self, model_path):
-        """
-        Load a pre-trained model with quantization for efficient inference.
-        
-        Args:
-            model_path (str): Path to the model
-        
-        Returns:
-            transformers model and tokenizer
-        """
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.float16,
         )
-        
-        try:
-            # Load model and tokenizer separately
-            model = AutoModelForCausalLM.from_pretrained(
-                model_path,
-                quantization_config=bnb_config,
-                torch_dtype=torch.float16,
-                device_map=self.device
-            )
-            
-            tokenizer = AutoTokenizer.from_pretrained(model_path)
-            
-            # Ensure pad token is set
-            if tokenizer.pad_token is None:
-                tokenizer.pad_token = tokenizer.eos_token
-            
-            return model, tokenizer
-        
-        except Exception as e:
-            logger.error(f"Model loading error: {e}")
-            raise
+        pipeline = transformers.pipeline("text-generation",
+                                         model = model_path,
+                                         model_kwargs={"torch_dtype":torch.float16,
+                                                       "quantization_config":bnb_config,
+                                                       }
+                                         )
+        return pipeline
 
     def chat(self, message, history):
-        """
-        Generate a response to a user message in the context of a conversation history.
+        messages = []
+        # Add the system ptomp 
+        messages.append({"role":"system","content":""""Your are Naruto from the anime "Naruto". Your responses should reflect his personality and speech patterns \n"""})
 
-        Args:
-            message (str): Current user message
-            history (list): Previous conversation messages
+        for message_and_respnse in history:
+            messages.append({"role":"user","content":message_and_respnse[0]})
+            messages.append({"role":"assistant","content":message_and_respnse[1]})
+        
+        messages.append({"role":"user","content":message})
 
-        Returns:
-            str: Generated response in Naruto's character
-        """
-        system_prompt = """You are Naruto from the anime "Naruto". Your responses should reflect his personality and speech patterns. Be direct, enthusiastic, and to the point. Respond as if you're talking to a fellow ninja or friend."""
+        terminator = [
+            self.model.tokenizer.eos_token_id,
+            self.model.tokenizer.convert_tokens_to_ids("<|eot_id|>")
+        ]
 
-    # Prepare conversation history
-        conversation_text = system_prompt + "\n"
-    
-        for user_msg, bot_resp in history:
-            conversation_text += f"User: {user_msg}\nNaruto: {bot_resp}\n"
-    
-        conversation_text += f"User: {message}\nNaruto:"
+        output = self.model(
+            messages,
+            max_length=256,
+            eos_token_id=terminator,
+            do_sample=True,
+            temperature=0.6,
+            top_p=0.9
+        )
 
-        try:
-        # Tokenize input and limit input size
-            inputs = self.model_tokenizer(
-                conversation_text, return_tensors="pt", truncation=True, max_length=512
-            ).to(self.device)
-            print(self.model_tokenizer.eos_token_id)
-            print(self.model_tokenizer.pad_token_id)
-        # Generate response
-            outputs = self.model.generate(
-                inputs["input_ids"],
-                # max_new_tokens=100,
-                max_new_tokens=256,
-                do_sample=True,
-                temperature=0.7,    
-                top_k=50,
-                top_p=0.95,
-                repetition_penalty=1.2,
-                pad_token_id=self.model_tokenizer.pad_token_id,
-                eos_token_id=self.model_tokenizer.eos_token_id,
-            )
-
-        # Decode and extract response
-            generated_text = self.model_tokenizer.decode(outputs[0], skip_special_tokens=True)
-            naruto_response = generated_text[len(conversation_text):].strip()
-
-        # Ensure the response is clean and ends appropriately
-            if naruto_response.endswith(("?", ".", "!")):
-                return naruto_response
-            return naruto_response + "!"
-
-        except Exception as e:
-            logger.error(f"Chat generation error: {e}")
-            return "Sorry theres some problem"
+        output_message = output[0]['generated_text'][-1]
+        return output_message
 
 
     def train(
