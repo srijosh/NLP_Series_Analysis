@@ -12,7 +12,7 @@ This repository contains a comprehensive NLP project inspired by the Naruto seri
 
 The Naruto NLP Project brings the Naruto universe to life through natural language processing. It features:
 
-- Naruto Chatbot: Chat interactively with Naruto using a fine-tuned conversational model.
+- Naruto Chatbot: Chat interactively with Naruto using a fine-tuned conversational model (based on Meta-Llama-3-8B-Instruct) using advanced techniques like LoRA (Low-Rank Adaptation) and 4-bit quantization for efficient performance.
 - Text Classification: Categorize jutsu into types such as Genjutsu, Ninjutsu, and Taijutsu.
 - Character Network Visualization: Build and explore character networks using named entity recognition (NER) and graph-based methods.
 - Theme Classification: Identify themes in dialogues or scenes such as friendship, hope, sacrifice, and betrayal using zero-shot classification.
