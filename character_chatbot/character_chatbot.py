@@ -97,9 +97,14 @@ class CharacterChatBot:
             
             tokenizer = AutoTokenizer.from_pretrained(model_path)
             
-            # Ensure pad token is set
             if tokenizer.pad_token is None:
-                tokenizer.pad_token = tokenizer.eos_token
+            # Option 1: Use an unused token from the vocabulary
+                tokenizer.pad_token = "[PAD]"  # Common choice for padding
+            # If [PAD] is not in the vocabulary, add it
+                if tokenizer.pad_token_id is None:
+                    tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+                # Resize model embeddings to account for the new token
+                    model.resize_token_embeddings(len(tokenizer))
             
             return model, tokenizer
         
@@ -139,14 +144,15 @@ class CharacterChatBot:
             outputs = self.model.generate(
                 inputs["input_ids"],
                 # max_new_tokens=100,
-                max_new_tokens=256,
+                max_new_tokens=150,
                 do_sample=True,
-                temperature=0.7,    
-                top_k=50,
-                top_p=0.95,
+                temperature=0.6,    
+                top_k=40,
+                top_p=0.9,
                 repetition_penalty=1.2,
                 pad_token_id=self.model_tokenizer.pad_token_id,
                 eos_token_id=self.model_tokenizer.eos_token_id,
+                early_stopping=True  # Stop at EOS token
             )
 
         # Decode and extract response
