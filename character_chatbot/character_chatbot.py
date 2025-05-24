@@ -128,7 +128,7 @@ class CharacterChatBot:
     # Prepare conversation history
         conversation_text = system_prompt + "\n"
     
-        for user_msg, bot_resp in history:
+        for user_msg, bot_resp in history[-2:]:
             conversation_text += f"User: {user_msg}\nNaruto: {bot_resp}\n"
     
         conversation_text += f"User: {message}\nNaruto:"
