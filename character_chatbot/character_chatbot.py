@@ -133,6 +133,11 @@ class CharacterChatBot:
     
         conversation_text += f"User: {message}\nNaruto:"
 
+        terminator = [
+            self.model_tokenizer.eos_token_id,
+            self.model_tokenizer.convert_tokens_to_ids("<|eot_id|>")
+        ]
+
         try:
         # Tokenize input and limit input size
             inputs = self.model_tokenizer(
@@ -146,12 +151,12 @@ class CharacterChatBot:
                 # max_new_tokens=100,
                 max_new_tokens=150,
                 do_sample=True,
-                temperature=0.6,    
+                temperature=0.5,    
                 top_k=40,
-                top_p=0.9,
+                top_p=0.7,
                 repetition_penalty=1.2,
                 pad_token_id=self.model_tokenizer.pad_token_id,
-                eos_token_id=self.model_tokenizer.eos_token_id,
+                eos_token_id=terminator,
                 early_stopping=True  # Stop at EOS token
             )
 
@@ -160,11 +165,13 @@ class CharacterChatBot:
 
             naruto_response = generated_text.split("Naruto:")[-1].strip()
 
+            if not naruto_response.endswith((".", "!", "?")):
+                sentences = re.split(r'(?<=[.!?])\s+', naruto_response)
+                if sentences:
+                    naruto_response = sentences[-1] if sentences[-1].endswith((".", "!", "?")) else " ".join(sentences[:-1])
+                naruto_response = naruto_response + "!" if not naruto_response.endswith((".", "!", "?")) else naruto_response
 
-        # Ensure the response is clean and ends appropriately
-            if naruto_response.endswith(("?", ".", "!")):
-                return naruto_response
-            return naruto_response + "!"
+            return naruto_response
 
         except Exception as e:
             logger.error(f"Chat generation error: {e}")
