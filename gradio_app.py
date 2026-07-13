@@ -10,7 +10,7 @@ load_dotenv()
 
 is_local = os.getenv('is_local', 'True').lower() == 'true'
 
-if is_local!= True:
+if is_local==False:
     # Initialize once globally (runs on script start)
     character_chatbot = CharacterChatBot(
         "srijanjoshi/Naruto_Llama-3-8B",
@@ -60,11 +60,11 @@ def classify_text(text_classifcation_model,text_classifcation_data_path,text_to_
     return output
 
 def chat_with_character_chatbot(message, history):
-    if is_local:
-        character_chatbot = CharacterChatBot(
-            "srijanjoshi/Naruto_Llama-3-8B",
-            huggingface_token=os.getenv('huggingface_token')
-        )
+    global character_chatbot
+    # character_chatbot = CharacterChatBot(
+    #     "srijanjoshi/Naruto_Llama-3-8B",
+    #     huggingface_token=os.getenv('huggingface_token')
+    # )
     output = character_chatbot.chat(message, history)
     return output
 
